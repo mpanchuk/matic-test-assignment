@@ -26,4 +26,10 @@ RSpec.describe Rules::BulkPrice do
       expect(rule.discount(Basket.new(codes, catalog))).to eq(expected_discount)
     end
   end
+
+  it 'gives no discount when the bulk price is not below the catalog price' do
+    pricier = described_class.new('A', min_quantity: 3, price: 120)
+
+    expect(pricier.discount(Basket.new(%w[A A A], catalog))).to eq(0)
+  end
 end

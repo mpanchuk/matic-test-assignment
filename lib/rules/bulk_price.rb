@@ -2,7 +2,8 @@
 
 module Rules
   # Bulk price: buy at least min_quantity units and each one costs price
-  # (integer cents) instead of the catalog price.
+  # (integer cents) instead of the catalog price. A bulk price that is not
+  # below the catalog price gives no discount.
   class BulkPrice
     def initialize(code, min_quantity:, price:)
       @code = code
@@ -14,7 +15,7 @@ module Rules
       quantity = basket.count(@code)
       return 0 if quantity < @min_quantity
 
-      quantity * (basket.unit_price(@code) - @price)
+      quantity * [basket.unit_price(@code) - @price, 0].max
     end
   end
 end
