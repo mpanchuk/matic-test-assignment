@@ -29,6 +29,23 @@ RSpec.describe Checkout do
 
       expect(default_checkout.total).to eq(CATALOG['FR'].price)
     end
+
+    it "subtracts every rule's discount from the subtotal" do
+      rules = [double(:rule, discount: 30), double(:rule, discount: 20)]
+      with_rules = described_class.new(*rules, catalog:)
+      %w[A B A].each { |code| with_rules.scan(code) }
+
+      expect(with_rules.total).to eq(400)
+    end
+
+    it 'gives each rule a basket of the scanned products' do
+      ten_off_each_a = double(:rule)
+      allow(ten_off_each_a).to receive(:discount) { |basket| basket.count('A') * 10 }
+      with_rule = described_class.new(ten_off_each_a, catalog:)
+      %w[A B A].each { |code| with_rule.scan(code) }
+
+      expect(with_rule.total).to eq(430)
+    end
   end
 
   describe '#scan' do
