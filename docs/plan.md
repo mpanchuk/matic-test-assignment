@@ -1,8 +1,17 @@
 # Task 1 plan: checkout with pricing rules
 
-Status: design chosen, implementation not started. Decisions and their reasoning are in
-[`decisions.md`](decisions.md) (draft). Requirements are in [`assignment.md`](assignment.md)
-and [`clarifications.md`](clarifications.md).
+Status: implemented; all eight steps below are done. Decisions and their reasoning are in
+[`decisions.md`](decisions.md). Requirements are in [`assignment.md`](assignment.md) and
+[`clarifications.md`](clarifications.md).
+
+Changes made during implementation, beyond the shape below:
+
+- `BulkPrice` floors the discount at 0 when the bulk price isn't below the catalog price, so
+  a discount is never negative (decision 1).
+- `PercentOffWithPurchase` raises `ArgumentError` unless `percent` is in `0..100`.
+- `bin/checkout` lists the products at start, and syncs stdout so an error stays in order
+  with the breakdown when output is piped. It formats money with named format tokens, as
+  RuboCop's default style requires.
 
 ## Context
 
