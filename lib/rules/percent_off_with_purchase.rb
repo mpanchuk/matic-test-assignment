@@ -6,6 +6,8 @@ module Rules
   # per unit, half away from zero.
   class PercentOffWithPurchase
     def initialize(trigger:, target:, percent:)
+      raise ArgumentError, "percent must be between 0 and 100, got #{percent.inspect}" unless (0..100).cover?(percent)
+
       @trigger = trigger
       @target = target
       @percent = percent

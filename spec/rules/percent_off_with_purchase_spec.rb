@@ -37,4 +37,19 @@ RSpec.describe Rules::PercentOffWithPurchase do
     # 10% of 105 is 10.5, rounded to 11 per unit; rounding the total would give 21.
     expect(ten_percent_off_c.discount(Basket.new(%w[A A C C], catalog))).to eq(22)
   end
+
+  describe 'percent' do
+    [-1, 101].each do |percent|
+      it "rejects #{percent}" do
+        expect { described_class.new(trigger: 'A', target: 'B', percent:) }
+          .to raise_error(ArgumentError, "percent must be between 0 and 100, got #{percent}")
+      end
+    end
+
+    [0, 100].each do |percent|
+      it "accepts #{percent}" do
+        expect { described_class.new(trigger: 'A', target: 'B', percent:) }.not_to raise_error
+      end
+    end
+  end
 end
