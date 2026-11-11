@@ -75,8 +75,9 @@ revisit.
   late to say which scan was wrong.
 - **Trade-off accepted:**
   - Callers must handle the error.
-  - Rule codes are not checked against the catalog, so a rule with a misspelled code may
-    simply never apply.
+  - Rule codes are not checked against the catalog. A misspelled code makes `total` raise
+    `KeyError` if the rule looks up that code's price, as `BuyOneGetOneFree` does. Otherwise
+    the rule simply never applies.
 - **Revisit when:** non-engineers configure rules. At that point rule codes should be
   checked when the `Checkout` is built.
 
