@@ -1,0 +1,42 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Interactive checkout with the current offers. Reads one product code per
+# line from stdin and prints the running breakdown after each scan.
+
+require_relative '../lib/checkout'
+require_relative '../lib/rules/buy_one_get_one_free'
+require_relative '../lib/rules/bulk_price'
+
+# Keep stdout and stderr in order when output is piped or redirected.
+$stdout.sync = true
+
+def money(cents)
+  format('$%<dollars>d.%<cents>02d', dollars: cents / 100, cents: cents % 100)
+end
+
+def row(label, amount)
+  format('  %<label>-30s %<amount>9s', label:, amount:)
+end
+
+checkout = Checkout.new(
+  Rules::BuyOneGetOneFree.new('FR'),
+  Rules::BulkPrice.new('SR', min_quantity: 3, price: 450)
+)
+
+products = CATALOG.values.map { |product| "#{product.code} #{product.name} #{money(product.price)}" }
+puts "Products: #{products.join(', ')}"
+puts 'Enter one product code per line; Ctrl-D to finish.'
+
+$stdin.each_line do |line|
+  code = line.strip.upcase
+  checkout.scan(code)
+
+  puts
+  puts "#{code} #{CATALOG.fetch(code).name}"
+  puts row('Subtotal', money(checkout.subtotal))
+  checkout.discounts.each { |rule, cents| puts row(rule.to_s, "-#{money(cents)}") }
+  puts row('Total', money(checkout.total))
+rescue Checkout::UnknownProductError => e
+  warn e.message
+end
