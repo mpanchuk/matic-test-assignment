@@ -21,8 +21,23 @@ class Checkout
     nil
   end
 
+  def subtotal
+    snapshot.subtotal
+  end
+
+  # Each rule that applies, mapped to its discount in cents.
+  def discounts
+    basket = snapshot
+    @rules.to_h { |rule| [rule, rule.discount(basket)] }.reject { |_rule, cents| cents.zero? }
+  end
+
   def total
-    basket = Basket.new(@codes, @catalog)
-    basket.subtotal - @rules.sum { |rule| rule.discount(basket) }
+    subtotal - discounts.values.sum
+  end
+
+  private
+
+  def snapshot
+    Basket.new(@codes, @catalog)
   end
 end

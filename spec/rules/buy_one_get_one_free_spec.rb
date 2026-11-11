@@ -27,4 +27,8 @@ RSpec.describe Rules::BuyOneGetOneFree do
       expect(rule.discount(Basket.new(codes, catalog))).to eq(expected_discount)
     end
   end
+
+  it 'is labelled with its product and offer' do
+    expect(rule.to_s).to eq('A: buy one, get one free')
+  end
 end

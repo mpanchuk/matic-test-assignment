@@ -17,5 +17,9 @@ module Rules
 
       quantity * [basket.unit_price(@code) - @price, 0].max
     end
+
+    def to_s
+      "#{@code}: bulk price for #{@min_quantity} or more"
+    end
   end
 end

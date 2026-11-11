@@ -10,5 +10,9 @@ module Rules
     def discount(basket)
       basket.count(@code) / 2 * basket.unit_price(@code)
     end
+
+    def to_s
+      "#{@code}: buy one, get one free"
+    end
   end
 end

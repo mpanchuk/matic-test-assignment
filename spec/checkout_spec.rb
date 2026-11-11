@@ -48,6 +48,26 @@ RSpec.describe Checkout do
     end
   end
 
+  describe '#subtotal' do
+    it 'sums the prices before any discount' do
+      with_rule = described_class.new(double(:rule, discount: 30), catalog:)
+      %w[A B].each { |code| with_rule.scan(code) }
+
+      expect(with_rule.subtotal).to eq(350)
+    end
+  end
+
+  describe '#discounts' do
+    it 'maps each rule that applies to its discount' do
+      applies = double(:rule, discount: 30)
+      does_not_apply = double(:rule, discount: 0)
+      also_applies = double(:rule, discount: 20)
+      with_rules = described_class.new(applies, does_not_apply, also_applies, catalog:)
+
+      expect(with_rules.discounts).to eq(applies => 30, also_applies => 20)
+    end
+  end
+
   describe '#scan' do
     it 'raises UnknownProductError for a code not in the catalog' do
       expect { checkout.scan('XX') }

@@ -38,6 +38,10 @@ RSpec.describe Rules::PercentOffWithPurchase do
     expect(ten_percent_off_c.discount(Basket.new(%w[A A C C], catalog))).to eq(22)
   end
 
+  it 'is labelled with its products and offer' do
+    expect(rule.to_s).to eq('B: 20% off with each A')
+  end
+
   describe 'percent' do
     [-1, 101].each do |percent|
       it "rejects #{percent}" do

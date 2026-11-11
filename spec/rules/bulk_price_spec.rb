@@ -32,4 +32,8 @@ RSpec.describe Rules::BulkPrice do
 
     expect(pricier.discount(Basket.new(%w[A A A], catalog))).to eq(0)
   end
+
+  it 'is labelled with its product and offer' do
+    expect(rule.to_s).to eq('A: bulk price for 3 or more')
+  end
 end

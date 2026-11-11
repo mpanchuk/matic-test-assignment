@@ -17,5 +17,9 @@ module Rules
       units = [basket.count(@trigger), basket.count(@target)].min
       units * (basket.unit_price(@target) * Rational(@percent, 100)).round
     end
+
+    def to_s
+      "#{@target}: #{@percent}% off with each #{@trigger}"
+    end
   end
 end
