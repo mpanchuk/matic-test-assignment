@@ -1,0 +1,7 @@
+# frozen_string_literal: true
+
+RSpec.configure do |config|
+  config.disable_monkey_patching!
+  config.mock_with(:rspec) { |mocks| mocks.verify_partial_doubles = true }
+  config.order = :random
+end

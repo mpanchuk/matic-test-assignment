@@ -1,0 +1,11 @@
+# Bundler
+/.bundle/
+/vendor/bundle/
+
+# Tool output
+/coverage/
+/tmp/
+
+# Local environment
+.DS_Store
+.claude/settings.local.json
