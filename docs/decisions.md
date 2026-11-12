@@ -25,9 +25,16 @@ revisit.
     rules can't matter.
   - Adding a rule is one class plus its spec, and `Checkout` never changes (clarification 1).
   - Each rule is a pure function that can be tested on its own.
-- **Trade-off accepted:** offers that overlap on the same unit stack, and no rule can see what
-  another rule did.
-- **Revisit when:** marketing asks for offers that must not combine (see 8).
+- **Trade-off accepted:**
+  - Offers that overlap on the same unit stack, and no rule can see what another rule did.
+  - So a rule on the amount after other offers, such as "10% off the whole order" or "spend
+    $50 after offers, get $5 off", can't be written without changing `Checkout`. Written
+    against `basket.subtotal`, it would also discount units another offer made free.
+  - `Basket` can't list its contents, so a rule over any product, such as "cheapest of any 3
+    items free", needs a new `Basket` method.
+  - Found in the review ([`review.md`](review.md), finding 5).
+- **Revisit when:** marketing asks for offers that must not combine (see 8), or for an offer
+  on the amount after other offers. That needs rules applied in phases.
 
 ## 2. Money is integer cents
 
@@ -107,8 +114,9 @@ revisit.
 - **Why:**
   - Limiting it to one coffee per tea caps what the offer costs.
   - Counting every scanned tea keeps the rule independent of BOGOF (see 1).
-  - The rule is invented to show that a rule of a different shape needs no change to
-    `Checkout` (clarification 1).
+  - The rule is invented to show that a rule over more than one product needs no change to
+    `Checkout` (clarification 1). It still works only from counts and unit prices of named
+    products; decision 1 lists the rules that don't fit.
 - **Trade-off accepted:** a free tea still earns a coffee discount, so FR, FR, CF, CF comes to
   $21.07.
 - **Revisit when:** marketing defines a real cross-product offer.

@@ -2,7 +2,8 @@
 
 Task 1 is a grocery checkout with pricing rules, in plain Ruby with no runtime gems. The
 requirements are in [`docs/assignment.md`](docs/assignment.md). The design decisions and the
-reasons for them are in [`docs/decisions.md`](docs/decisions.md).
+reasons for them are in [`docs/decisions.md`](docs/decisions.md). A critical review of the
+code, and what was fixed after it, is in [`docs/review.md`](docs/review.md).
 
 ## Setup
 
@@ -75,7 +76,7 @@ To add a rule:
 1. Write its spec in `spec/rules/` and its class in `lib/rules/`.
 2. Pass an instance to `Checkout.new`, and add it to `bin/checkout` if it is a live offer.
 
-`Checkout` doesn't change. For example, $5 off orders of $50 or more:
+`Checkout` doesn't change. For example, $5 off when the undiscounted subtotal is $50 or more:
 
 ```ruby
 module Rules
@@ -100,6 +101,11 @@ Checkout.new(Rules::AmountOffOver.new(threshold: 5000, amount: 500))
 
 `Rules::PercentOffWithPurchase` ("buy Fruit Tea, get 20% off Coffee") spans two products and
 was added the same way, with no change to `Checkout`.
+
+Every rule sees prices before any offer. A rule that needs the amount after other offers,
+such as "10% off the whole order", or one that needs to list the basket's contents, such as
+"cheapest of any 3 items free", doesn't fit without changing `Checkout` or `Basket`.
+Decision 1 lists these limits.
 
 ## Layout
 

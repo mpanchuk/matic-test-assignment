@@ -13,7 +13,7 @@ Status key: **Confirmed** (answer matches my assumption), **Changed** (answer ov
 - **Assumption:** the design should allow cross-product rules, even though the two current ones are single-product.
 - **Answer:** "Assume marketing team can come up with any new rules, including ones you invent."
 - **Status:** Confirmed, and broader than I asked.
-- **Implication:** a rule must be able to see the whole basket, not one product. Rule shapes cannot be enumerated in advance, so adding a rule has to mean writing new code without changing `Checkout`. I will add one invented rule of a different shape to prove this.
+- **Implication:** a rule must be able to see the whole basket, not one product. Rule shapes cannot be enumerated in advance, so adding a rule has to mean writing new code without changing `Checkout`. I will add one invented cross-product rule to show this.
 
 ### 2. Who adds new rules: engineers in code, or marketing through configuration or a UI?
 
