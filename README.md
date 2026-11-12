@@ -61,7 +61,8 @@ An unknown code prints an error and the session carries on.
 
 A rule is any object with two methods:
 
-- `discount(basket)` returns the discount in integer cents, never negative.
+- `discount(basket)` returns the discount in integer cents, never negative. `Checkout`
+  raises `Checkout::InvalidDiscountError` for anything else, such as `4.5` or `nil`.
 - `to_s` returns a label for the breakdown.
 
 The basket is a frozen snapshot with `count(code)`, `unit_price(code)` and `subtotal`. Every

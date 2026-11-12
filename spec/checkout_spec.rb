@@ -95,6 +95,18 @@ RSpec.describe Checkout do
     end
   end
 
+  describe 'a rule whose discount is not a non-negative Integer of cents' do
+    [4.5, -10, nil].each do |bad|
+      it "raises InvalidDiscountError for #{bad.inspect}" do
+        with_rule = described_class.new(double(:rule, discount: bad, to_s: 'Bad offer'), catalog:)
+        message = "Bad offer returned #{bad.inspect}, not a non-negative Integer of cents"
+
+        expect { with_rule.total }.to raise_error(Checkout::InvalidDiscountError, message)
+        expect { with_rule.discounts }.to raise_error(Checkout::InvalidDiscountError, message)
+      end
+    end
+  end
+
   describe '#scan' do
     it 'raises UnknownProductError for a code not in the catalog' do
       expect { checkout.scan('XX') }

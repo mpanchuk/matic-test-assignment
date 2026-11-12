@@ -13,7 +13,8 @@ revisit.
   (never negative), and `#to_s`, its label. `Checkout#total` is the subtotal minus the sum of
   the discounts. Every rule sees the same frozen basket, and every rule passed counts, so the
   same rule passed twice applies twice. `#discounts` returns `[rule, amount]` pairs in the
-  order given.
+  order given. `Checkout` raises `Checkout::InvalidDiscountError` if a rule returns anything
+  but a non-negative Integer, such as `4.5` (a price in dollars) or `nil`.
 - **Options considered:**
   - (A) discount calculators, as above.
   - (B) a price pipeline that rewrites line items in constructor order.

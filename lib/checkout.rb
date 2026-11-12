@@ -8,6 +8,7 @@ require_relative 'product'
 # methods return Float dollars, converted once from cents.
 class Checkout
   class UnknownProductError < StandardError; end
+  class InvalidDiscountError < StandardError; end
 
   def initialize(*rules, catalog: CATALOG)
     @rules = rules
@@ -30,7 +31,7 @@ class Checkout
   def discounts
     basket = snapshot
     @rules.filter_map do |rule|
-      cents = rule.discount(basket)
+      cents = discount_cents(rule, basket)
       [rule, dollars(cents)] unless cents.zero?
     end
   end
@@ -39,13 +40,20 @@ class Checkout
   # more than the subtotal.
   def total
     basket = snapshot
-    dollars([basket.subtotal - @rules.sum { |rule| rule.discount(basket) }, 0].max)
+    dollars([basket.subtotal - @rules.sum { |rule| discount_cents(rule, basket) }, 0].max)
   end
 
   private
 
   def snapshot
     Basket.new(@codes, @catalog)
+  end
+
+  def discount_cents(rule, basket)
+    cents = rule.discount(basket)
+    return cents if cents.is_a?(Integer) && !cents.negative?
+
+    raise InvalidDiscountError, "#{rule} returned #{cents.inspect}, not a non-negative Integer of cents"
   end
 
   def dollars(cents)
