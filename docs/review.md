@@ -197,3 +197,31 @@ under `Rules::`.
    line per item?" (decision 7's "revisit when").
 5. "The assignment says you'll discuss AI use, and `CLAUDE.md` is committed. Which decisions
    came from the AI, and where did you overrule it?"
+
+## Follow-up
+
+The High and Medium findings were fixed on the `review-fixes` branch, one commit each, test
+first, with `bundle exec rspec` and `bundle exec rubocop` green before every commit. The Low
+findings were left as they are.
+
+| Finding | Status | Commit |
+|---|---|---|
+| Requirements: `total` in cents | Fixed: `total`, `subtotal` and `discounts` return Float dollars; `co.total == 22.45` is true (decision 3) | `86d3533` |
+| 1. Hash keyed by rule | Fixed: every rule passed counts; `discounts` returns `[rule, amount]` pairs | `f4d17a5` |
+| 2. Negative total | Fixed: `total` never goes below zero (decision 8) | `2cf5d12` |
+| 3. Unchecked discount contract | Fixed: `Checkout` raises `InvalidDiscountError`; `BulkPrice` validates `price:` and `min_quantity:` | `78b1f05`, `3fba287` |
+| 4. Misspelled rule codes | Fixed: `Basket#count` and `#unit_price` raise `KeyError` (decision 5) | `0a8be49` |
+| 5. Narrow `Basket` | Documented, not changed: README example reworded, limits listed in decision 1 | `afda9f8` |
+| 6. Untested claims | Fixed: all three rules and rule order in acceptance specs; duplicates, the zero floor and typos covered with their fixes. The README's `AmountOffOver` still has no spec | `ffbd4c3` |
+| 7. Docs vs code | Fixed | `afda9f8`, `f4d17a5` |
+| 8. Implementation-detail specs | Fixed | `f3d28c1`, `f4d17a5` |
+| 9. `money` and negatives | Not fixed. No longer reachable: totals and discounts can't be negative | |
+| 10. Empty CLI line | Not fixed | |
+| 11. Bulk price label | Not fixed. The README no longer merges rows, but two SR bulk offers still print identical labels | |
+| 12. Offers wired in three places | Not fixed | |
+| 13. `trigger == target` | Not fixed | |
+| 14. Namespacing | Not fixed | |
+
+Interviewer question 1 changes with the first fix. Expect instead: "Why Float dollars, and
+what does `co.subtotal - co.total` give?" It gives `3.1099999999999994` for the first example;
+decision 3 records that trade-off.
