@@ -88,9 +88,10 @@ revisit.
   late to say which scan was wrong.
 - **Trade-off accepted:**
   - Callers must handle the error.
-  - Rule codes are not checked against the catalog. A misspelled code makes `total` raise
-    `KeyError` if the rule looks up that code's price, as `BuyOneGetOneFree` does. Otherwise
-    the rule simply never applies.
+  - Rule codes are checked when a rule asks the basket about them, not at `Checkout.new`. A
+    misspelled code makes `total` raise `KeyError` ("Unknown product code"). Before the review
+    ([`review.md`](review.md), finding 4), a rule that only counted units, such as
+    `BulkPrice`, silently never applied; `Basket#count` now checks the code too.
 - **Revisit when:** non-engineers configure rules. At that point rule codes should be
   checked when the `Checkout` is built.
 

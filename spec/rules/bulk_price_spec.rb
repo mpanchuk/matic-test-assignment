@@ -33,6 +33,12 @@ RSpec.describe Rules::BulkPrice do
     expect(pricier.discount(Basket.new(%w[A A A], catalog))).to eq(0)
   end
 
+  it 'raises when its code is not in the catalog, instead of never applying' do
+    misspelled = described_class.new('Z', min_quantity: 3, price: 80)
+
+    expect { misspelled.discount(Basket.new(%w[A A A], catalog)) }.to raise_error(KeyError)
+  end
+
   it 'is labelled with its product and offer' do
     expect(rule.to_s).to eq('A: bulk price for 3 or more')
   end
