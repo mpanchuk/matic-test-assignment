@@ -27,12 +27,13 @@ co = Checkout.new(
 )
 %w[FR SR FR FR CF].each { |code| co.scan(code) }
 
-co.total                            # => 2245
-co.subtotal                         # => 2556
-co.discounts.transform_keys(&:to_s) # => {"FR: buy one, get one free"=>311}
+co.total                            # => 22.45
+co.subtotal                         # => 25.56
+co.discounts.transform_keys(&:to_s) # => {"FR: buy one, get one free"=>3.11}
 ```
 
-- All money is integer cents, so `total` returns `2245`, not `22.45`.
+- `total`, `subtotal` and `discounts` return Float dollars, so `co.total == 22.45` is true.
+  Inside, prices and discounts are integer cents, and `Checkout` converts once, at the end.
 - Prices come from `CATALOG` in `lib/product.rb`. Pass `catalog:` to use other products.
 - Scanning a code that isn't in the catalog raises `Checkout::UnknownProductError` and leaves
   the basket unchanged.

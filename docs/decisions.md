@@ -28,28 +28,38 @@ revisit.
 
 ## 2. Money is integer cents
 
-- **Decision:** prices, discounts and totals are Integer cents. Percentage discounts are
-  computed with `Rational` and rounded per unit, half away from zero.
+- **Decision:** prices and discounts are Integer cents in `Basket` and the rules, and
+  `Checkout` adds them up in cents. Only its public methods convert to dollars (see 3).
+  Percentage discounts are computed with `Rational` and rounded per unit, half away from
+  zero.
 - **Options considered:** Float, BigDecimal, Rational, a Money value object, integer cents.
 - **Why:**
   - Integer cents are exact for addition, subtraction and multiplication by an integer, and
     need no dependency.
-- **Trade-off accepted:** the unit is implicit, and callers must know it's cents.
+- **Trade-off accepted:** the unit is implicit, and rule authors must know a discount is
+  cents.
 - **Revisit when:** a second currency appears (see 9).
 
-## 3. `Checkout#total` returns Integer cents
+## 3. `Checkout#total` returns Float dollars
 
-- **Decision:** `co.total # => 2245`. Only the CLI formats it as `$22.45`.
+- **Decision:** `co.total # => 22.45`, so `co.total == 22.45` is true. `#subtotal` and
+  `#discounts` return dollars too. Each is computed in integer cents and divided by `100.0`
+  once, at the end. Only the CLI formats it as `$22.45`.
 - **Options considered:**
-  - Integer cents.
+  - Integer cents (`2245`), the first version.
   - Float dollars (`cents / 100.0` at the end).
   - A Money object.
   - A formatted string.
-- **Why:** there is no conversion and no float anywhere. It's the minor-units convention
-  payment APIs use. Formatting is a display concern.
-- **Trade-off accepted:** it reads differently from the "$22.45" in the assignment table, and
-  the method name doesn't say "cents".
-- **Revisit when:** callers need a value that formats itself (see 9).
+- **Why:**
+  - The assignment shows `total_cost = co.total` next to totals in dollars, so a check like
+    `co.total == 22.45` should pass. Changed after the review ([`review.md`](review.md)).
+  - Dividing an integer by `100.0` gives the Float closest to the exact amount, which is the
+    same Float as the literal `22.45`, so the comparison holds for every amount.
+  - Sums inside `Checkout` stay exact, because they are done in cents.
+- **Trade-off accepted:** callers who do arithmetic on the results get float error again:
+  `co.subtotal - co.total` can be `3.1099999999999994`.
+- **Revisit when:** callers need to do arithmetic on totals. Then expose cents, or a Money
+  object (see 9).
 
 ## 4. The catalog is injected, with a default
 
@@ -131,8 +141,8 @@ revisit.
 
 ## 9. Out of scope: a Money class
 
-- **Decision:** no Money value object. Use plain integer cents, with formatting done only in
-  the CLI.
+- **Decision:** no Money value object. Use integer cents inside and Float dollars at
+  `Checkout`'s public methods, with formatting done only in the CLI.
 - **Options considered:** a Money class (cents, currency, formatting), or integer cents.
 - **Why:** there is one currency. A class would add about 20 lines and more to explain,
   without changing any result.

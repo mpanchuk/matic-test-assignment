@@ -11,8 +11,8 @@ require_relative '../lib/rules/bulk_price'
 # Keep stdout and stderr in order when output is piped or redirected.
 $stdout.sync = true
 
-def money(cents)
-  format('$%<dollars>d.%<cents>02d', dollars: cents / 100, cents: cents % 100)
+def money(dollars)
+  format('$%.2f', dollars)
 end
 
 def row(label, amount)
@@ -24,7 +24,7 @@ checkout = Checkout.new(
   Rules::BulkPrice.new('SR', min_quantity: 3, price: 450)
 )
 
-products = CATALOG.values.map { |product| "#{product.code} #{product.name} #{money(product.price)}" }
+products = CATALOG.values.map { |product| "#{product.code} #{product.name} #{money(product.price / 100.0)}" }
 puts "Products: #{products.join(', ')}"
 puts 'Enter one product code per line; Ctrl-D to finish.'
 
