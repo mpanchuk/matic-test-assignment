@@ -26,24 +26,24 @@ class Checkout
     dollars(snapshot.subtotal)
   end
 
-  # Each rule that applies, mapped to its discount in dollars.
+  # [rule, discount in dollars] for each rule that applies, in the order given.
   def discounts
-    discount_cents(snapshot).transform_values { |cents| dollars(cents) }
+    basket = snapshot
+    @rules.filter_map do |rule|
+      cents = rule.discount(basket)
+      [rule, dollars(cents)] unless cents.zero?
+    end
   end
 
   def total
     basket = snapshot
-    dollars(basket.subtotal - discount_cents(basket).values.sum)
+    dollars(basket.subtotal - @rules.sum { |rule| rule.discount(basket) })
   end
 
   private
 
   def snapshot
     Basket.new(@codes, @catalog)
-  end
-
-  def discount_cents(basket)
-    @rules.to_h { |rule| [rule, rule.discount(basket)] }.reject { |_rule, cents| cents.zero? }
   end
 
   def dollars(cents)

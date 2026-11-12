@@ -44,6 +44,14 @@ RSpec.describe Checkout do
       expect(with_rules.total).to eq(4.0)
     end
 
+    it 'counts a rule passed twice, twice' do
+      rule = double(:rule, discount: 30)
+      with_rules = described_class.new(rule, rule, catalog:)
+      %w[A B].each { |code| with_rules.scan(code) }
+
+      expect(with_rules.total).to eq(2.9)
+    end
+
     it 'gives each rule a basket of the scanned products' do
       ten_off_each_a = double(:rule)
       allow(ten_off_each_a).to receive(:discount) { |basket| basket.count('A') * 10 }
@@ -64,13 +72,19 @@ RSpec.describe Checkout do
   end
 
   describe '#discounts' do
-    it 'maps each rule that applies to its discount in dollars' do
+    it 'pairs each rule that applies with its discount in dollars' do
       applies = double(:rule, discount: 30)
       does_not_apply = double(:rule, discount: 0)
       also_applies = double(:rule, discount: 20)
       with_rules = described_class.new(applies, does_not_apply, also_applies, catalog:)
 
-      expect(with_rules.discounts).to eq(applies => 0.3, also_applies => 0.2)
+      expect(with_rules.discounts).to eq([[applies, 0.3], [also_applies, 0.2]])
+    end
+
+    it 'lists a rule passed twice, twice' do
+      rule = double(:rule, discount: 30)
+
+      expect(described_class.new(rule, rule, catalog:).discounts).to eq([[rule, 0.3], [rule, 0.3]])
     end
   end
 

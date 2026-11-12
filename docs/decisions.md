@@ -11,7 +11,9 @@ revisit.
 
 - **Decision:** a rule is any object with `#discount(basket)`, which returns integer cents
   (never negative), and `#to_s`, its label. `Checkout#total` is the subtotal minus the sum of
-  the discounts. Every rule sees the same frozen basket.
+  the discounts. Every rule sees the same frozen basket, and every rule passed counts, so the
+  same rule passed twice applies twice. `#discounts` returns `[rule, amount]` pairs in the
+  order given.
 - **Options considered:**
   - (A) discount calculators, as above.
   - (B) a price pipeline that rewrites line items in constructor order.

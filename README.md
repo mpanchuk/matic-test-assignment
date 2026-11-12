@@ -27,9 +27,11 @@ co = Checkout.new(
 )
 %w[FR SR FR FR CF].each { |code| co.scan(code) }
 
-co.total                            # => 22.45
-co.subtotal                         # => 25.56
-co.discounts.transform_keys(&:to_s) # => {"FR: buy one, get one free"=>3.11}
+co.total     # => 22.45
+co.subtotal  # => 25.56
+co.discounts # => [[#<Rules::BuyOneGetOneFree ...>, 3.11]]
+co.discounts.map { |rule, amount| [rule.to_s, amount] }
+# => [["FR: buy one, get one free", 3.11]]
 ```
 
 - `total`, `subtotal` and `discounts` return Float dollars, so `co.total == 22.45` is true.
