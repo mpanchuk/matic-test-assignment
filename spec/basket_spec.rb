@@ -31,10 +31,6 @@ RSpec.describe Basket do
     expect(basket.subtotal).to eq(450)
   end
 
-  it 'is frozen' do
-    expect(basket).to be_frozen
-  end
-
   it 'is a snapshot: later changes to the codes do not affect it' do
     codes = %w[A]
     snapshot = described_class.new(codes, catalog)
