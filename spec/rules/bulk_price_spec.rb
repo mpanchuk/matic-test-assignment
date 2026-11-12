@@ -36,4 +36,22 @@ RSpec.describe Rules::BulkPrice do
   it 'is labelled with its product and offer' do
     expect(rule.to_s).to eq('A: bulk price for 3 or more')
   end
+
+  describe 'arguments' do
+    {
+      { price: 4.5 } => 'price must be a non-negative Integer of cents, got 4.5',
+      { price: -1 } => 'price must be a non-negative Integer of cents, got -1',
+      { min_quantity: 0 } => 'min_quantity must be a positive Integer, got 0',
+      { min_quantity: 2.5 } => 'min_quantity must be a positive Integer, got 2.5'
+    }.each do |bad, message|
+      it "rejects #{bad}" do
+        expect { described_class.new('A', min_quantity: 3, price: 80, **bad) }
+          .to raise_error(ArgumentError, message)
+      end
+    end
+
+    it 'accepts a price of 0 and a min_quantity of 1' do
+      expect { described_class.new('A', min_quantity: 1, price: 0) }.not_to raise_error
+    end
+  end
 end
