@@ -66,7 +66,8 @@ A rule is any object with two methods:
 
 The basket is a frozen snapshot with `count(code)`, `unit_price(code)` and `subtotal`. Every
 rule sees the same basket and the discounts add up, so the order of rules doesn't matter.
-Offers that overlap on the same unit stack; decision 8 explains why and when to change that.
+Offers that overlap on the same unit stack, and the total never goes below zero; decision 8
+explains why and when to change that.
 
 To add a rule:
 

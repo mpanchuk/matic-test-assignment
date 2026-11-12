@@ -35,9 +35,11 @@ class Checkout
     end
   end
 
+  # Never below zero, even when offers that stack on the same units discount
+  # more than the subtotal.
   def total
     basket = snapshot
-    dollars(basket.subtotal - @rules.sum { |rule| rule.discount(basket) })
+    dollars([basket.subtotal - @rules.sum { |rule| rule.discount(basket) }, 0].max)
   end
 
   private

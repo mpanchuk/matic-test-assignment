@@ -126,7 +126,10 @@ revisit.
 
 ## 8. Out of scope: exclusivity between offers
 
-- **Decision:** all offers stack. Nothing stops two offers from applying to the same unit.
+- **Decision:** all offers stack. Nothing stops two offers from applying to the same unit,
+  but `Checkout#total` never goes below zero: overlapping offers can at worst make the basket
+  free. Added after the review ([`review.md`](review.md), finding 2), where BOGOF plus a $1
+  bulk price on Fruit Tea gave FR, FR a total of −$1.11.
 - **Options considered:**
   - Stacking only.
   - A `BestOf.new(a, b)` wrapper rule for specific pairs of offers.
@@ -137,7 +140,8 @@ revisit.
   - A greedy resolution gives surprising totals: $25.57 against a best possible $24.18 for
     FR, FR, CF, CF.
 - **Trade-off accepted:** a future offer that overlaps on the same unit will double-discount
-  until it is handled.
+  until it is handled. When the floor applies, the CLI breakdown adds up to more than the
+  subtotal.
 - **Revisit when:** marketing first says two offers can't combine. Add `BestOf`, with
   `Checkout` unchanged. If many offers need it, move to claims.
 

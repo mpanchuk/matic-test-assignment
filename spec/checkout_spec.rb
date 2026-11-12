@@ -52,6 +52,13 @@ RSpec.describe Checkout do
       expect(with_rules.total).to eq(2.9)
     end
 
+    it 'never goes below zero when the discounts exceed the subtotal' do
+      with_rules = described_class.new(double(:rule, discount: 300), double(:rule, discount: 200), catalog:)
+      %w[A B].each { |code| with_rules.scan(code) }
+
+      expect(with_rules.total).to eq(0.0)
+    end
+
     it 'gives each rule a basket of the scanned products' do
       ten_off_each_a = double(:rule)
       allow(ten_off_each_a).to receive(:discount) { |basket| basket.count('A') * 10 }
