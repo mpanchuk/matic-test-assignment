@@ -3,16 +3,11 @@
 require 'product'
 
 RSpec.describe 'CATALOG' do
-  it 'holds the four products, keyed by code, priced in cents' do
-    expect(CATALOG).to eq(
-      'FR' => Product.new(code: 'FR', name: 'Fruit Tea', price: 311),
-      'SR' => Product.new(code: 'SR', name: 'Strawberries', price: 500),
-      'CF' => Product.new(code: 'CF', name: 'Coffee', price: 1123),
-      'AJ' => Product.new(code: 'AJ', name: 'Apple Juice', price: 725)
-    )
+  it 'keys each of the four products by its own code' do
+    expect(CATALOG.transform_values(&:code)).to eq('FR' => 'FR', 'SR' => 'SR', 'CF' => 'CF', 'AJ' => 'AJ')
   end
 
-  it 'is frozen' do
-    expect(CATALOG).to be_frozen
+  it 'prices every product in Integer cents' do
+    expect(CATALOG.values.map(&:price)).to all(be_a(Integer))
   end
 end

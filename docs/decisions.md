@@ -11,7 +11,10 @@ revisit.
 
 - **Decision:** a rule is any object with `#discount(basket)`, which returns integer cents
   (never negative), and `#to_s`, its label. `Checkout#total` is the subtotal minus the sum of
-  the discounts. Every rule sees the same frozen basket.
+  the discounts. Every rule sees the same frozen basket, and every rule passed counts, so the
+  same rule passed twice applies twice. `#discounts` returns `[rule, amount]` pairs in the
+  order given. `Checkout` raises `Checkout::InvalidDiscountError` if a rule returns anything
+  but a non-negative Integer, such as `4.5` (a price in dollars) or `nil`.
 - **Options considered:**
   - (A) discount calculators, as above.
   - (B) a price pipeline that rewrites line items in constructor order.
@@ -22,34 +25,51 @@ revisit.
     rules can't matter.
   - Adding a rule is one class plus its spec, and `Checkout` never changes (clarification 1).
   - Each rule is a pure function that can be tested on its own.
-- **Trade-off accepted:** offers that overlap on the same unit stack, and no rule can see what
-  another rule did.
-- **Revisit when:** marketing asks for offers that must not combine (see 8).
+- **Trade-off accepted:**
+  - Offers that overlap on the same unit stack, and no rule can see what another rule did.
+  - So a rule on the amount after other offers, such as "10% off the whole order" or "spend
+    $50 after offers, get $5 off", can't be written without changing `Checkout`. Written
+    against `basket.subtotal`, it would also discount units another offer made free.
+  - `Basket` can't list its contents, so a rule over any product, such as "cheapest of any 3
+    items free", needs a new `Basket` method.
+  - Found in the review ([`review.md`](review.md), finding 5).
+- **Revisit when:** marketing asks for offers that must not combine (see 8), or for an offer
+  on the amount after other offers. That needs rules applied in phases.
 
 ## 2. Money is integer cents
 
-- **Decision:** prices, discounts and totals are Integer cents. Percentage discounts are
-  computed with `Rational` and rounded per unit, half away from zero.
+- **Decision:** prices and discounts are Integer cents in `Basket` and the rules, and
+  `Checkout` adds them up in cents. Only its public methods convert to dollars (see 3).
+  Percentage discounts are computed with `Rational` and rounded per unit, half away from
+  zero.
 - **Options considered:** Float, BigDecimal, Rational, a Money value object, integer cents.
 - **Why:**
   - Integer cents are exact for addition, subtraction and multiplication by an integer, and
     need no dependency.
-- **Trade-off accepted:** the unit is implicit, and callers must know it's cents.
+- **Trade-off accepted:** the unit is implicit, and rule authors must know a discount is
+  cents.
 - **Revisit when:** a second currency appears (see 9).
 
-## 3. `Checkout#total` returns Integer cents
+## 3. `Checkout#total` returns Float dollars
 
-- **Decision:** `co.total # => 2245`. Only the CLI formats it as `$22.45`.
+- **Decision:** `co.total # => 22.45`, so `co.total == 22.45` is true. `#subtotal` and
+  `#discounts` return dollars too. Each is computed in integer cents and divided by `100.0`
+  once, at the end. Only the CLI formats it as `$22.45`.
 - **Options considered:**
-  - Integer cents.
+  - Integer cents (`2245`), the first version.
   - Float dollars (`cents / 100.0` at the end).
   - A Money object.
   - A formatted string.
-- **Why:** there is no conversion and no float anywhere. It's the minor-units convention
-  payment APIs use. Formatting is a display concern.
-- **Trade-off accepted:** it reads differently from the "$22.45" in the assignment table, and
-  the method name doesn't say "cents".
-- **Revisit when:** callers need a value that formats itself (see 9).
+- **Why:**
+  - The assignment shows `total_cost = co.total` next to totals in dollars, so a check like
+    `co.total == 22.45` should pass. Changed after the review ([`review.md`](review.md)).
+  - Dividing an integer by `100.0` gives the Float closest to the exact amount, which is the
+    same Float as the literal `22.45`, so the comparison holds for every amount.
+  - Sums inside `Checkout` stay exact, because they are done in cents.
+- **Trade-off accepted:** callers who do arithmetic on the results get float error again:
+  `co.subtotal - co.total` can be `3.1099999999999994`.
+- **Revisit when:** callers need to do arithmetic on totals. Then expose cents, or a Money
+  object (see 9).
 
 ## 4. The catalog is injected, with a default
 
@@ -75,9 +95,10 @@ revisit.
   late to say which scan was wrong.
 - **Trade-off accepted:**
   - Callers must handle the error.
-  - Rule codes are not checked against the catalog. A misspelled code makes `total` raise
-    `KeyError` if the rule looks up that code's price, as `BuyOneGetOneFree` does. Otherwise
-    the rule simply never applies.
+  - Rule codes are checked when a rule asks the basket about them, not at `Checkout.new`. A
+    misspelled code makes `total` raise `KeyError` ("Unknown product code"). Before the review
+    ([`review.md`](review.md), finding 4), a rule that only counted units, such as
+    `BulkPrice`, silently never applied; `Basket#count` now checks the code too.
 - **Revisit when:** non-engineers configure rules. At that point rule codes should be
   checked when the `Checkout` is built.
 
@@ -93,8 +114,9 @@ revisit.
 - **Why:**
   - Limiting it to one coffee per tea caps what the offer costs.
   - Counting every scanned tea keeps the rule independent of BOGOF (see 1).
-  - The rule is invented to show that a rule of a different shape needs no change to
-    `Checkout` (clarification 1).
+  - The rule is invented to show that a rule over more than one product needs no change to
+    `Checkout` (clarification 1). It still works only from counts and unit prices of named
+    products; decision 1 lists the rules that don't fit.
 - **Trade-off accepted:** a free tea still earns a coffee discount, so FR, FR, CF, CF comes to
   $21.07.
 - **Revisit when:** marketing defines a real cross-product offer.
@@ -114,7 +136,10 @@ revisit.
 
 ## 8. Out of scope: exclusivity between offers
 
-- **Decision:** all offers stack. Nothing stops two offers from applying to the same unit.
+- **Decision:** all offers stack. Nothing stops two offers from applying to the same unit,
+  but `Checkout#total` never goes below zero: overlapping offers can at worst make the basket
+  free. Added after the review ([`review.md`](review.md), finding 2), where BOGOF plus a $1
+  bulk price on Fruit Tea gave FR, FR a total of −$1.11.
 - **Options considered:**
   - Stacking only.
   - A `BestOf.new(a, b)` wrapper rule for specific pairs of offers.
@@ -125,14 +150,15 @@ revisit.
   - A greedy resolution gives surprising totals: $25.57 against a best possible $24.18 for
     FR, FR, CF, CF.
 - **Trade-off accepted:** a future offer that overlaps on the same unit will double-discount
-  until it is handled.
+  until it is handled. When the floor applies, the CLI breakdown adds up to more than the
+  subtotal.
 - **Revisit when:** marketing first says two offers can't combine. Add `BestOf`, with
   `Checkout` unchanged. If many offers need it, move to claims.
 
 ## 9. Out of scope: a Money class
 
-- **Decision:** no Money value object. Use plain integer cents, with formatting done only in
-  the CLI.
+- **Decision:** no Money value object. Use integer cents inside and Float dollars at
+  `Checkout`'s public methods, with formatting done only in the CLI.
 - **Options considered:** a Money class (cents, currency, formatting), or integer cents.
 - **Why:** there is one currency. A class would add about 20 lines and more to explain,
   without changing any result.

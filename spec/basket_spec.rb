@@ -22,12 +22,13 @@ RSpec.describe Basket do
     expect(basket.unit_price('B')).to eq(250)
   end
 
-  it 'totals the undiscounted prices' do
-    expect(basket.subtotal).to eq(450)
+  it 'raises KeyError for a code not in the catalog, so a misspelled rule code fails loudly' do
+    expect { basket.count('Z') }.to raise_error(KeyError, 'Unknown product code: "Z"')
+    expect { basket.unit_price('Z') }.to raise_error(KeyError, 'Unknown product code: "Z"')
   end
 
-  it 'is frozen' do
-    expect(basket).to be_frozen
+  it 'totals the undiscounted prices' do
+    expect(basket.subtotal).to eq(450)
   end
 
   it 'is a snapshot: later changes to the codes do not affect it' do

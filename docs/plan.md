@@ -13,6 +13,17 @@ Changes made during implementation, beyond the shape below:
   with the breakdown when output is piped. It formats money with named format tokens, as
   RuboCop's default style requires.
 
+Changes after the review ([`review.md`](review.md)), which supersede the plan below where
+they differ:
+
+- `Checkout#total`, `#subtotal` and `#discounts` return Float dollars (decision 3). Rules and
+  `Basket` stay in integer cents.
+- `total` sums every rule passed, never goes below zero, and `#discounts` returns
+  `[rule, amount]` pairs (decisions 1 and 8).
+- `Checkout` raises `InvalidDiscountError` for a discount that isn't a non-negative Integer,
+  and `BulkPrice` validates its arguments.
+- `Basket` raises `KeyError` for a code not in the catalog (decision 5).
+
 ## Context
 
 Task 1 has a 75-minute time box and is judged on code design and extensibility. Fixed before
@@ -282,5 +293,5 @@ make them pass.
 - `bundle exec rubocop`.
 - `printf 'FR\nSR\nFR\nFR\nCF\n' | bin/checkout` shows BOGOF −$3.11 and a total of $22.45.
   Entering `XX` prints an unknown-product message and the session continues.
-- Live demo check: adding a new rule touches only `lib/rules/` and its spec. `Checkout` is not
-  in the diff.
+- Live demo check: adding a new rule touches only `lib/rules/` and its spec, plus
+  `bin/checkout` if it is a live offer. `Checkout` is not in the diff.
