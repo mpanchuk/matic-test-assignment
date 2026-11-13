@@ -1,9 +1,70 @@
 # Matic Test Assignment
 
-Task 1 is a grocery checkout with pricing rules, in plain Ruby with no runtime gems. The
-requirements are in [`docs/assignment.md`](docs/assignment.md). The design decisions and the
-reasons for them are in [`docs/decisions.md`](docs/decisions.md). A critical review of the
-code, and what was fixed after it, is in [`docs/review.md`](docs/review.md).
+Two tasks from [`docs/assignment.md`](docs/assignment.md): a grocery checkout with pricing
+rules (Task 1), and a spec, architecture and rollout plan for a link shortener (Task 2). The
+questions I asked the team, and their answers, are in
+[`docs/clarifications.md`](docs/clarifications.md).
+
+## How I worked
+
+**Task 1: checkout**
+
+1. Asked the team whether a rule can span several products, and who adds new rules.
+2. Compared three rule designs on the same basket and wrote down the decisions before any
+   code ([`plan.md`](docs/plan.md), [`decisions.md`](docs/decisions.md)).
+3. Turned the three example totals into acceptance specs.
+4. Built it test first, one small commit per step, with RSpec and RuboCop green each time.
+5. Had an AI review the code as a sceptical senior reviewer ([`review.md`](docs/review.md)),
+   then fixed the High and Medium findings.
+
+**Task 2: link shortener**
+
+1. Asked the team eight questions: use case, who creates links, volume, sensitive data,
+   tracking, interface, cost and constraints.
+2. Wrote my own position on each topic first ([`notes.md`](docs/link-shortener/notes.md)).
+3. Had an AI argue against each position
+   ([`ai-arguments.md`](docs/link-shortener/ai-arguments.md)), then revised my notes.
+4. Had an AI research vendor prices and the numbers for building
+   ([`research.md`](docs/link-shortener/research.md)).
+5. Wrote the plan for the team ([`docs/link-shortener/README.md`](docs/link-shortener/README.md)).
+
+[`CLAUDE.md`](CLAUDE.md) holds the working rules I gave the AI assistant.
+
+## Task 1: Discounts
+
+Plain Ruby, no runtime gems. The interface is the one from the assignment:
+`Checkout.new(rule1, rule2, ...)`, `scan(code)` and `total`, and `co.total == 22.45` for the
+first example.
+
+- A rule is any object with `discount(basket)`, which returns cents. The discounts add up, so
+  the order of rules doesn't matter, and adding a rule never changes `Checkout`.
+- Rules: buy one, get one free (Fruit Tea); bulk price (Strawberries); and an invented one,
+  20% off one Coffee per Fruit Tea, to show that a rule over two products fits too.
+- Money is integer cents inside and converted to dollars once, so sums stay exact.
+- Overlapping offers stack, but the total never goes below zero. Offers that must not combine,
+  or that depend on the amount after other offers, are out of scope (decisions 1 and 8).
+- `bin/checkout` is the interactive interface: scan codes and see which offers applied.
+
+## Task 2: Link shortener
+
+The Call Center team asked what will be delivered and how much it will cost. The full plan is
+in [`docs/link-shortener/README.md`](docs/link-shortener/README.md).
+
+- **What:** a small service on a Matic-branded short domain. The SMS system sends a message's
+  links in one call and puts the short links it gets back into the text. A link can expire,
+  or be switched off at once. If the shortener is down, the SMS goes out with the long links.
+- **Cost:** about 4 engineer-weeks to build (16–19 days, one engineer), then roughly low
+  hundreds of dollars a month to run, plus an owner on call. Buying needs an enterprise
+  contract at 1.5M links a month: from about $1,800 a year (Short.io, unconfirmed at this
+  volume) to up to $22,500 a month (shortening built into the SMS provider).
+- **Recommendation: build.** A short link can lead to a customer's policy documents, so we
+  want control over the codes, how long links live and where the URLs are stored.
+- **When:** 7–10 weeks: 3–4 to build, a 2-week pilot on one SMS template, then 2–4 to move
+  the other templates. A feature flag switches back to long links at any point.
+- **Needed from the team:** answers to 8 open questions, above all whether the destination
+  pages ask the customer to log in.
+
+The rest of this page is the Task 1 reference: setup, usage and how to add a rule.
 
 ## Setup
 
